@@ -5,8 +5,14 @@ export {
   type UploadResult,
 } from "./r2-storage";
 
+// 导出请求相关的函数
+export { get, post } from "./request";
+
 // 导出便捷函数
 export { createR2Client, createR2ClientFromEnv, getMimeType, generateUniqueFileName } from "./utils";
+
+// 导出chat相关的函数
+export { grsaiChat, tuziFlux, replicateFlux, kieChat, handleChatCallback } from "./chat";
 
 // 版本信息
 export const VERSION = "1.0.0";
