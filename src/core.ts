@@ -1,7 +1,11 @@
+// 核心功能模块 - 所有环境通用
+// 导出请求相关的函数
+export { get, post } from "./request";
 
+// 版本信息
+export const VERSION = "1.0.0";
 
-
-
+// 浏览器安全的工具函数 - 直接在这里实现，避免引用 utils.ts
 export function getMimeType(fileName: string): string {
   const ext = fileName.split(".").pop()?.toLowerCase();
 

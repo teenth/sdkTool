@@ -1,9 +1,19 @@
 {
   "name": "@teenth/sdk-tool",
-  "version": "1.1.0",
+  "version": "2.2.4",
   "description": "sdk-tool with R2 storage support",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "browser": "./dist/browser.js",
+      "node": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./browser": "./dist/browser.js",
+    "./node": "./dist/index.js",
+    "./react": "./dist/react.js"
+  },
   "scripts": {
     "build": "node scripts/build.js",
     "dev": "tsc --watch",
@@ -11,7 +21,6 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "prepublishOnly": "npm run build",
-    "publish:sdk": "node scripts/publish.js",
     "lint": "eslint src --ext .ts",
     "format": "prettier --write src/**/*.ts"
   },
@@ -23,8 +32,8 @@
   "author": "teenth",
   "license": "MIT",
   "devDependencies": {
-    "@types/node": "^20.0.0",
     "@types/jest": "^29.0.0",
+    "@types/node": "^20.0.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "eslint": "^8.0.0",
@@ -35,7 +44,11 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.400.0",
-    "@aws-sdk/s3-request-presigner": "^3.400.0"
+    "@aws-sdk/s3-request-presigner": "^3.400.0",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.1",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
   },
   "files": [
     "dist/**/*"

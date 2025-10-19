@@ -49,4 +49,4 @@ temp/
 package-lock.json
 yarn.lock
 
-*.zip
+*.tgz

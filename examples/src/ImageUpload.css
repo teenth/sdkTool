@@ -1,0 +1,24 @@
+.image-upload-container {
+  padding: 16px;
+  min-width: 200px;
+}
+
+.uploading-status {
+  margin-top: 12px;
+  padding: 8px 12px;
+  background-color: #eff6ff;
+  color: #3b82f6;
+  border-radius: 6px;
+  font-size: 14px;
+  text-align: center;
+}
+
+.error-message {
+  margin-top: 12px;
+  padding: 8px 12px;
+  background-color: #fef2f2;
+  color: #ef4444;
+  border-radius: 6px;
+  font-size: 14px;
+  text-align: center;
+}

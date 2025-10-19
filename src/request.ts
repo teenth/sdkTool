@@ -3,7 +3,7 @@ export interface PostOptions {
   body: any;
   [key: string]: any;
 }
-export const get = async (url: string, options?: PostOptions) => {
+export const get = async (url: string, options?: Omit<PostOptions, "body">) => {
   const res = await fetch(url, options);
   if (res.ok) {
     return res.json();
@@ -30,4 +30,12 @@ export const post = async (url: string, options?: PostOptions) => {
   };
 };
 
+export const RES_CODE = {
+  SUCCESS: 200,
+  ERROR: 500,
+};
 
+export const RES_MESSAGE = {
+  SUCCESS: "success",
+  ERROR: "error",
+};

@@ -61,9 +61,6 @@ interface FileInterface {
 // 在 Node.js 环境中，File 可能不存在，所以使用联合类型
 declare global {
   interface File extends FileInterface {}
-
-  // 声明 fetch 为全局变量，兼容 Node.js 18+ 和浏览器环境
-  var fetch: any;
 }
 
 export interface R2Config {
@@ -227,13 +224,13 @@ function generateRandomFileName(): string {
 // 兼容 Node.js 和浏览器环境的 fetch
 async function universalFetch(url: string): Promise<any> {
   // 使用全局 fetch，如果不存在则抛出错误
-  if (typeof fetch === "undefined") {
+  if (typeof globalThis.fetch === "undefined") {
     throw new Error(
       "Fetch is not available. Please install node-fetch or use Node.js 18+"
     );
   }
 
-  return fetch(url);
+  return globalThis.fetch(url);
 }
 
 export function createR2Storage(config: R2Config): R2StorageInstance {

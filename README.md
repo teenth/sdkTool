@@ -1,275 +1,103 @@
-# @syc/sdk-tool
+# SDK Tool
 
-Baidu Cloud SDK with R2 storage support - 一个用于 Cloudflare R2 存储的 TypeScript SDK
+A multi-environment SDK with R2 storage support for Node.js and browser environments.
 
-## 安装
+## Installation
 
 ```bash
-npm install @syc/sdk-tool
+npm install @teenth/sdk-tool
 ```
 
-## 快速开始
+## Usage
 
-### 基础用法
+### Automatic Environment Detection
 
-```typescript
-import { createR2Client } from "@syc/sdk-tool";
+The SDK automatically detects your environment and provides the appropriate functionality:
 
-// 创建 R2 客户端
-const r2 = createR2Client({
+```javascript
+import { get, post, grsaiChat, VERSION } from "@teenth/sdk-tool";
+
+// These functions work in both Node.js and browser environments
+console.log(VERSION);
+```
+
+### Node.js Environment (Full Features)
+
+In Node.js, you get access to all features including R2 storage:
+
+```javascript
+import { createR2Storage, type R2Config } from '@teenth/sdk-tool';
+
+const config: R2Config = {
   accountId: "your-account-id",
   accessKeyId: "your-access-key",
   secretAccessKey: "your-secret-key",
-  bucket: "your-bucket-name",
-});
+  bucket: "your-bucket",
+  cdnDomain: "https://cdn.example.com"
+};
 
-// 上传文件
-const fileBuffer = Buffer.from("Hello World");
-const result = await r2.upload("test.txt", fileBuffer, {
-  contentType: "text/plain",
-});
-console.log("Upload result:", result);
+const r2Storage = createR2Storage(config);
+const result = await r2Storage.upload("image.jpg", file);
 ```
 
-### 使用环境变量
+### Browser Environment (Limited Features)
 
-```typescript
-import { createR2ClientFromEnv, createR2Client } from "@syc/sdk-tool";
+In browser environments, R2 storage features are not available to avoid Node.js dependencies:
 
-// 方式1: 直接从环境变量创建配置
-const config = createR2ClientFromEnv();
-const r2 = createR2Client(config);
+```javascript
+import { get, post, grsaiChat } from "@teenth/sdk-tool";
 
-// 环境变量设置
-// R2_ACCOUNT_ID=your-account-id
-// R2_ACCESS_KEY_ID=your-access-key
-// R2_SECRET_ACCESS_KEY=your-secret-key
-// R2_BUCKET=your-bucket-name
-// R2_REGION=auto (可选)
+// Chat and HTTP request functions work normally
+const response = await get("https://api.example.com/data");
 ```
 
-### 完整示例
+### Explicit Environment Import
 
-```typescript
-import {
-  createR2Client,
-  getMimeType,
-  generateUniqueFileName,
-} from "@syc/sdk-tool";
+You can also explicitly import the version you need:
 
-const r2 = createR2Client({
-  accountId: "your-account-id",
-  accessKeyId: "your-access-key",
-  secretAccessKey: "your-secret-key",
-  bucket: "your-bucket-name",
-});
+```javascript
+// Explicitly import browser version
+import { get, post } from "@teenth/sdk-tool/browser";
 
-// 上传文件
-const fileBuffer = Buffer.from("Hello World");
-const uniqueFileName = generateUniqueFileName("test.txt", "uploads");
-const mimeType = getMimeType(uniqueFileName);
-
-const uploadResult = await r2.upload(uniqueFileName, fileBuffer, {
-  contentType: mimeType,
-});
-
-console.log("文件上传成功:", uploadResult);
-
-// 获取文件
-const fileContent = await r2.get(uniqueFileName);
-
-// 检查文件是否存在
-const exists = await r2.exists(uniqueFileName);
-console.log("文件是否存在:", exists);
-
-// 获取预签名URL
-const signedUrl = await r2.getSignedUrl(uniqueFileName, 3600);
-console.log("预签名URL:", signedUrl);
-
-// 列出文件
-const files = await r2.list("uploads/", 10);
-console.log("文件列表:", files);
-
-// 删除文件
-await r2.delete(uniqueFileName);
+// Explicitly import Node.js version
+import { createR2Storage } from "@teenth/sdk-tool/node";
 ```
 
-## API 文档
+## Features
 
-### 类型定义
+### Available in All Environments
 
-#### R2Config
+- HTTP requests (`get`, `post`)
+- Chat functions (`grsaiChat`, `tuziFlux`, `replicateFlux`, `kieChat`)
+- Utility functions (`getMimeType`, `generateUniqueFileName`)
 
-```typescript
-interface R2Config {
-  accountId: string; // Cloudflare 账户ID
-  accessKeyId: string; // R2 访问密钥ID
-  secretAccessKey: string; // R2 访问密钥
-  bucket: string; // 存储桶名称
-  region?: string; // 区域，默认为 'auto'
-  endpoint?: string; // 自定义端点
-}
-```
+### Node.js Only
 
-#### UploadOptions
+- R2 storage operations (`createR2Storage`)
+- File system operations
+- R2 client utilities (`createR2Client`, `createR2ClientFromEnv`)
 
-```typescript
-interface UploadOptions {
-  contentType?: string; // 文件MIME类型
-  expiresIn?: number; // 过期时间（秒）
-}
-```
+## API Reference
 
-#### UploadResult
+### HTTP Functions
 
-```typescript
-interface UploadResult {
-  url: string; // 文件访问URL
-  fileName: string; // 文件名
-  size: number; // 文件大小（字节）
-}
-```
+- `get(url: string, options?: RequestOptions): Promise<any>`
+- `post(url: string, data?: any, options?: RequestOptions): Promise<any>`
 
-### 主要函数
+### Chat Functions
 
-#### createR2Client(config: R2Config)
+- `grsaiChat(messages: ChatMessage[]): Promise<ChatResponse>`
+- `tuziFlux(prompt: string): Promise<ImageResponse>`
+- `replicateFlux(prompt: string): Promise<ImageResponse>`
+- `kieChat(message: string): Promise<ChatResponse>`
 
-创建 R2 存储客户端
+### R2 Storage (Node.js only)
 
-```typescript
-const r2 = createR2Client({
-  accountId: "your-account-id",
-  accessKeyId: "your-access-key",
-  secretAccessKey: "your-secret-key",
-  bucket: "your-bucket-name",
-});
-```
+- `createR2Storage(config: R2Config): R2StorageInstance`
+- `R2StorageInstance.upload(fileName: string, data: FileInput): Promise<UploadResult>`
+- `R2StorageInstance.get(fileName: string): Promise<any>`
+- `R2StorageInstance.delete(fileName: string): Promise<void>`
 
-#### createR2ClientFromEnv()
-
-从环境变量创建 R2 配置
-
-```typescript
-const config = createR2ClientFromEnv();
-const r2 = createR2Client(config);
-```
-
-### R2 客户端方法
-
-#### upload(fileName: string, data: Buffer, options?: UploadOptions)
-
-上传文件
-
-```typescript
-const result = await r2.upload("test.txt", fileBuffer, {
-  contentType: "text/plain",
-});
-```
-
-#### get(fileName: string)
-
-获取文件内容
-
-```typescript
-const fileContent = await r2.get("test.txt");
-```
-
-#### delete(fileName: string)
-
-删除文件
-
-```typescript
-await r2.delete("test.txt");
-```
-
-#### list(prefix?: string, maxKeys?: number)
-
-列出文件（默认最多返回1000个文件）
-
-```typescript
-const files = await r2.list("uploads/", 100);
-```
-
-#### getSignedUrl(fileName: string, expiresIn?: number)
-
-获取预签名URL（默认1小时有效）
-
-```typescript
-const url = await r2.getSignedUrl("test.txt", 3600);
-```
-
-#### exists(fileName: string)
-
-检查文件是否存在
-
-```typescript
-const exists = await r2.exists("test.txt");
-```
-
-### 工具函数
-
-#### getMimeType(fileName: string)
-
-根据文件扩展名获取MIME类型
-
-```typescript
-const mimeType = getMimeType("test.jpg"); // 'image/jpeg'
-```
-
-支持的文件类型：
-
-- 图片：jpg, jpeg, png, gif, webp, svg
-- 文档：pdf, txt, json, xml, html, css, js
-- 压缩：zip, rar
-- 音视频：mp4, mp3, wav
-
-#### generateUniqueFileName(originalName: string, prefix?: string)
-
-生成唯一文件名
-
-```typescript
-const uniqueName = generateUniqueFileName("test.txt", "uploads");
-// 输出: uploads_test_1640995200000_abc123def.txt
-```
-
-## 错误处理
-
-所有方法都会抛出错误，建议使用 try-catch 处理：
-
-```typescript
-try {
-  const result = await r2.upload("test.txt", fileBuffer);
-  console.log("上传成功:", result);
-} catch (error) {
-  console.error("上传失败:", error);
-}
-```
-
-## 环境变量配置
-
-创建 `.env` 文件：
-
-```bash
-R2_ACCOUNT_ID=your-account-id
-R2_ACCESS_KEY_ID=your-access-key
-R2_SECRET_ACCESS_KEY=your-secret-key
-R2_BUCKET=your-bucket-name
-R2_REGION=auto
-```
-
-## 许可证
+## License
 
 MIT
-
-## 贡献
-
-欢迎提交 Issue 和 Pull Request！
-
-## 更新日志
-
-### 1.0.0
-
-- 初始版本
-- 支持 Cloudflare R2 存储
-- 提供完整的文件操作 API
-- 包含实用工具函数

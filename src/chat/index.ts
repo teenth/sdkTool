@@ -1,11 +1,23 @@
-
 import { get, post } from "../request";
 const grsai_secret = process.env.GRSAI_SECRET;
 const tuzi_secret = process.env.TUZI_SECRET;
 const kie_secret = process.env.KIE_SECRET;
 const urlPrefix = process.env.URL_PREFIX;
+export * as flux from './flux'
 if (!grsai_secret || !tuzi_secret || !kie_secret || !urlPrefix) {
-  throw new Error(`Missing environment variables: grsai_secret: ${grsai_secret}, tuzi_secret: ${tuzi_secret}, kie_secret: ${kie_secret}, urlPrefix: ${urlPrefix}`);
+  throw new Error(
+    `Missing environment variables: grsai_secret: ${grsai_secret}, tuzi_secret: ${tuzi_secret}, kie_secret: ${kie_secret}, urlPrefix: ${urlPrefix}`
+  );
+}
+
+function formatUrls(urls: string | string[] | undefined) {
+  if (Array.isArray(urls)) {
+    return urls
+  }
+  if (urls) {
+    return [urls]
+  }
+  return null
 }
 // 兼容各个平台的回调参数处理
 export const handleChatCallback = (data: any) => {
@@ -15,14 +27,24 @@ export const handleChatCallback = (data: any) => {
       const { taskId, info } = data.data;
       return {
         id: taskId,
-        url: info.resultImageUrl,
+        url: info.result_urls?.[0],
         status: "succeeded",
+        results: info.result_urls,
       };
     }
     return {
       id: data.taskId,
-      url: '',
-      status: 'failed',
+      url: "",
+      status: "failed",
+      results: [],
+    };
+  }
+  if (data.results) {
+    return {
+      id: data.id,
+      url: data.results[0]?.url,
+      status: data.status,
+      results: data.results,
     };
   }
   // grsai
@@ -30,8 +52,9 @@ export const handleChatCallback = (data: any) => {
     id: data.id,
     url: data.url,
     status: data.status,
+    results: [],
   };
-}
+};
 const grsaiHeader = {
   "Content-Type": "application/json",
   Authorization: `Bearer ${grsai_secret}`,
@@ -51,17 +74,17 @@ export const type = {
 };
 export interface ChatReq {
   prompt: string;
-  userImg: string;
+  userImg?: string | string[];
   webHook?: string;
-  userId: string;
-  category: string;
-  aspectRatio: string;
+  userId?: string;
+  category?: string;
+  aspectRatio?: string;
   model?: string;
   point?: string;
 }
 export async function grsaiChat(req: ChatReq) {
   const response = await post(
-    "https://api.grsai.com/v1/draw/completions",
+    "https://grsai.dakka.com.cn/v1/draw/completions",
     {
       method: "POST",
       headers: grsaiHeader,
@@ -70,8 +93,26 @@ export async function grsaiChat(req: ChatReq) {
         prompt: req.prompt,
         size: req.aspectRatio,
         variants: 1,
-        urls: [req.userImg],
-        webHook: `${urlPrefix}/api/generation/chat/callback`,
+        urls: formatUrls(req.userImg),
+        webHook: req.webHook,
+        shutProgress: false,
+      },
+    }
+  );
+  return response;
+}
+
+export async function grsaiNanoBananaChat(req: ChatReq) {
+  const response = await post(
+    "https://grsai.dakka.com.cn/v1/draw/nano-banana",
+    {
+      method: "POST",
+      headers: grsaiHeader,
+      body: {
+        model: req.model || "nano-banana",
+        prompt: req.prompt,
+        urls: formatUrls(req.userImg),
+        webHook: req.webHook,
         shutProgress: false,
       },
     }
@@ -80,17 +121,21 @@ export async function grsaiChat(req: ChatReq) {
 }
 
 export async function grsaiResult(id: string) {
-  const response = await post(`https://api.grsai.com/v1/draw/completions`, {
-    method: "POST",
-    headers: grsaiHeader,
-    body: {
-      id,
-    },
-  });
+  const response = await post(
+    `https://grsai.dakka.com.cn/v1/draw/completions`,
+    {
+      method: "POST",
+      headers: grsaiHeader,
+      body: {
+        id,
+      },
+    }
+  );
   return response;
 }
 
 export async function tuziFlux(req: ChatReq) {
+  console.log("tuziFlux 后续不在维护", req);
   const prompt = `${req.userImg}, ${req.prompt}`;
   const res = await fetch("https://api.tu-zi.com/v1/images/generations", {
     method: "POST",
@@ -117,6 +162,7 @@ export async function tuziFlux(req: ChatReq) {
   }
 }
 export async function replicateFlux(req: ChatReq) {
+  console.log("replicateFlux 后续不在维护", req);
   const prompt = `${req.userImg}, ${req.prompt}`;
   const res = await fetch(
     "https://api.replicate.com/v1/models/black-forest-labs/flux-kontext-pro/predictions",
@@ -148,9 +194,8 @@ export async function replicateFlux(req: ChatReq) {
 
 export async function grsaiStatus() {
   const res = await get(
-    `https://api.grsai.com/client/common/getModelStatus?model=sora-image`,
+    `https://grsai.dakka.com.cn/client/common/getModelStatus?model=sora-image`,
     {
-      body: {},
       method: "GET",
       headers: grsaiHeader,
     }
@@ -159,6 +204,7 @@ export async function grsaiStatus() {
 }
 
 export async function kieChat(req: ChatReq) {
+  console.log("kieChat flux 后续不在维护", req);
   const res = await post(
     "https://kieai.erweima.ai/api/v1/flux/kontext/generate",
     {
@@ -171,7 +217,7 @@ export async function kieChat(req: ChatReq) {
         output_format: "png",
         enableFallback: true,
         fallbackModel: "GPT_IMAGE_1",
-        callBackUrl: `${urlPrefix}/api/generation/chat/callback`,
+        callBackUrl: req.webHook,
       },
     }
   );
