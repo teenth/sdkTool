@@ -49,6 +49,7 @@ import {
 import { getSignedUrl as getS3SignedUrl } from "@aws-sdk/s3-request-presigner";
 import * as fs from "fs";
 import * as path from "path";
+import { Readable } from "stream";
 
 // 兼容 Node.js 和浏览器环境的 File 类型定义
 interface FileInterface {
@@ -113,6 +114,7 @@ export interface R2StorageInstance {
     url: string,
     options?: MigrateUrlOptions
   ) => Promise<UploadResult>;
+  client: S3Client
 }
 
 // 文件类型转换工具函数
@@ -428,6 +430,29 @@ export function createR2Storage(config: R2Config): R2StorageInstance {
       throw error;
     }
   };
+  // 判断是否为 Web Stream（fetch 返回）
+  const isWebReadableStream = (obj: any) =>
+    obj && typeof obj.getReader === "function";
+
+  // Web Stream → Node Stream
+  const webStreamToNodeStream = (webStream: ReadableStream) => {
+    const reader = webStream.getReader();
+
+    return new Readable({
+      async read() {
+        try {
+          const { done, value } = await reader.read();
+          if (done) {
+            this.push(null);
+          } else {
+            this.push(Buffer.from(value));
+          }
+        } catch (err) {
+          this.destroy(err as Error);
+        }
+      },
+    });
+  };
 
   return {
     get,
@@ -437,5 +462,6 @@ export function createR2Storage(config: R2Config): R2StorageInstance {
     getSignedUrl,
     exists,
     migrateUrl,
+    client,
   };
 }

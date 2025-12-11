@@ -28,9 +28,6 @@ export {
   R2StorageInstance,
 } from "./r2-storage";
 
-// 导出React组件
-export * from "./react";
-
 export function createR2Client(
   config: R2Config = {} as R2Config
 ): R2StorageInstance {
